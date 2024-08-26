@@ -2,52 +2,7 @@
 #include <string>
 #include <map>
 #include <iomanip>
-
-// Class representing a vending machine
-class VendingMachine {
-private:
-    std::string name;
-    std::map<std::string, int> inventory;
-    double totalSales;
-
-public:
-    // Constructor: Initializes the vending machine with a name
-    VendingMachine(std::string name) : name(name), totalSales(0.0) {
-        // Using 'this' pointer to differentiate between parameter and member variable
-        this->name = name;
-    }
-
-    // Adds an item to the vending machine's inventory
-    void addItem(std::string item, int quantity) {
-        this->inventory[item] += quantity;  // Using 'this' to explicitly access the member variable
-        std::cout << "Added " << quantity << " " << item << "(s) to " << this->name << std::endl;
-    }
-
-    // Displays the current inventory of the vending machine
-    void displayInventory() {
-        std::cout << "Inventory for " << this->name << ":" << std::endl;
-        for (const auto& item : this->inventory) {
-            std::cout << item.first << ": " << item.second << std::endl;
-        }
-    }
-
-    // Simulates selling an item
-    bool sellItem(std::string item, double price) {
-        if (this->inventory[item] > 0) {
-            this->inventory[item]--;
-            this->totalSales += price;
-            return true;
-        }
-        return false;
-    }
-
-    // Returns the current object for method chaining
-    VendingMachine* updateAndDisplay(std::string item, int quantity) {
-        this->addItem(item, quantity);
-        this->displayInventory();
-        return this;  // Returning 'this' pointer for method chaining
-    }
-};
+#include <vector>
 
 // Class representing a product that can be sold in a vending machine
 class Product {
@@ -56,11 +11,11 @@ private:
     double price;
 
 public:
-    // Constructor: Initializes a product with a name and price
-    Product(std::string name, double price) : name(name), price(price) {
-        this->name = name;  // Using 'this' pointer to differentiate between parameter and member variable
-        this->price = price;
-    }
+    // Default constructor
+    Product() : name(""), price(0.0) {}
+
+    // Parameterized constructor
+    Product(std::string name, double price) : name(name), price(price) {}
 
     // Displays information about the product
     void displayInfo() {
@@ -73,21 +28,77 @@ public:
         std::cout << "Applied " << discountPercent << "% discount to " << this->name << ". New price: $"
                   << std::fixed << std::setprecision(2) << this->price << std::endl;
     }
+
+    // Getter for product name
+    std::string getName() const {
+        return this->name;
+    }
+
+    // Getter for product price
+    double getPrice() const {
+        return this->price;
+    }
+};
+
+// Class representing a vending machine
+class VendingMachine {
+private:
+    std::string name;
+    std::vector<Product> products;
+
+public:
+    // Constructor: Initializes the vending machine with a name
+    VendingMachine(std::string name) : name(name) {}
+
+    // Adds a product to the vending machine
+    void addProduct(const Product& product) {
+        this->products.push_back(product);
+        std::cout << "Added " << product.getName() << " to " << this->name << std::endl;
+    }
+
+    // Displays all products in the vending machine
+    void displayProducts() {
+        std::cout << "Products in " << this->name << ":" << std::endl;
+        for (const auto& product : this->products) {
+            product.displayInfo();
+        }
+    }
+
+    // Applies a discount to all products
+    void applyDiscountToAll(double discountPercent) {
+        for (auto& product : this->products) {
+            product.applyDiscount(discountPercent);
+        }
+    }
 };
 
 int main() {
+    // Create an array of Product objects
+    const int NUM_PRODUCTS = 5;
+    Product productArray[NUM_PRODUCTS] = {
+        Product("Chips", 1.50),
+        Product("Candy", 1.00),
+        Product("Soda", 2.00),
+        Product("Chocolate", 1.75),
+        Product("Gum", 0.75)
+    };
+
     // Create a vending machine object
     VendingMachine snackMachine("Snack Machine");
 
-    // Use method chaining with 'this' pointer
-    snackMachine.updateAndDisplay("chips", 10)->updateAndDisplay("candy", 15);
+    // Add products from the array to the vending machine
+    for (int i = 0; i < NUM_PRODUCTS; ++i) {
+        snackMachine.addProduct(productArray[i]);
+    }
 
-    // Create a product object
-    Product chips("Potato Chips", 1.50);
+    // Display all products in the vending machine
+    snackMachine.displayProducts();
 
-    // Display product information and apply discount
-    chips.displayInfo();
-    chips.applyDiscount(10);
+    // Apply a discount to all products
+    snackMachine.applyDiscountToAll(10);
+
+    // Display updated products
+    snackMachine.displayProducts();
 
     return 0;
 }
