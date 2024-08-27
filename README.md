@@ -28,8 +28,9 @@ A C++ project simulating a simple virtual vending machine. It demonstrates objec
 
 ## How to Use
 
-1. **Compile:** `g++ main.cpp -o vending_machine`
-2. **Run:** `./vending_machine`
+1. **Compile:** `g++ Main.cpp -o Main`
+2. **Run:** `./Main`
+3. **Compile and Run:** `g++ Main.cpp -o Main && ./Main`
 
 ## Sample Output
 
