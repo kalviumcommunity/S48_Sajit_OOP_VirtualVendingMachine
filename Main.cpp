@@ -59,15 +59,15 @@ public:
     // Displays all products in the vending machine
     void displayProducts() {
         std::cout << "Products in " << this->name << ":" << std::endl;
-        for (const auto& product : this->products) {
-            product.displayInfo();
+        for (std::vector<Product>::iterator it = this->products.begin(); it != this->products.end(); ++it) {
+            it->displayInfo();
         }
     }
 
     // Applies a discount to all products
     void applyDiscountToAll(double discountPercent) {
-        for (auto& product : this->products) {
-            product.applyDiscount(discountPercent);
+        for (std::vector<Product>::iterator it = this->products.begin(); it != this->products.end(); ++it) {
+            it->applyDiscount(discountPercent);
         }
     }
 };
