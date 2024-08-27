@@ -1,79 +1,101 @@
 #include <iostream>
 #include <string>
-#include <map>
-#include <iomanip>
 #include <vector>
+#include <iomanip>
+#include <cstdlib>
+#include <ctime>
 
-// Class representing a product that can be sold in a vending machine
+using namespace std;
+
 class Product {
 private:
-    std::string name;
+    string name;
     double price;
+    double discount;
 
 public:
-    // Default constructor
-    Product() : name(""), price(0.0) {}
+    Product(string name, double price) : name(name), price(price), discount(0.0) {}
 
-    // Parameterized constructor
-    Product(std::string name, double price) : name(name), price(price) {}
-
-    // Displays information about the product
-    void displayInfo() {
-        std::cout << "Product: " << this->name << ", Price: $" << std::fixed << std::setprecision(2) << this->price << std::endl;
+    void displayInfo() const {
+        cout << "Product: " << name << ", Price: $" << fixed << setprecision(2) << price;
+        if (discount > 0) {
+            cout << ", Discount: " << discount << "%";
+        }
+        cout << endl;
     }
 
-    // Applies a discount to the product's price
     void applyDiscount(double discountPercent) {
-        this->price *= (1 - discountPercent / 100);
-        std::cout << "Applied " << discountPercent << "% discount to " << this->name << ". New price: $"
-                  << std::fixed << std::setprecision(2) << this->price << std::endl;
+        discount = discountPercent;
+        price *= (1 - discount / 100);
     }
 
-    // Getter for product name
-    std::string getName() const {
-        return this->name;
-    }
-
-    // Getter for product price
-    double getPrice() const {
-        return this->price;
-    }
+    string getName() const { return name; }
+    double getPrice() const { return price; }
+    double getDiscount() const { return discount; }
 };
 
-// Class representing a vending machine
 class VendingMachine {
 private:
-    std::string name;
-    std::vector<Product> products;
+    string name;
+    vector<Product> products;
 
 public:
-    // Constructor: Initializes the vending machine with a name
-    VendingMachine(std::string name) : name(name) {}
+    VendingMachine(string name) : name(name) {}
 
-    // Adds a product to the vending machine
     void addProduct(const Product& product) {
-        this->products.push_back(product);
-        std::cout << "Added " << product.getName() << " to " << this->name << std::endl;
+        products.push_back(product);
+        cout << "Added " << product.getName() << " to " << name << endl;
     }
 
-    // Displays all products in the vending machine
-    void displayProducts() {
-        std::cout << "Products in " << this->name << ":" << std::endl;
-        for (const auto& product : this->products) {
-            product.displayInfo();
+    void displayProducts() const {
+        cout << "Products in " << name << ":" << endl;
+        for (size_t i = 0; i < products.size(); ++i) {
+            cout << i + 1 << ". ";
+            products[i].displayInfo();
         }
     }
 
-    // Applies a discount to all products
-    void applyDiscountToAll(double discountPercent) {
-        for (auto& product : this->products) {
-            product.applyDiscount(discountPercent);
+    void applyRandomDiscounts() {
+        srand(time(0));
+        for (size_t i = 0; i < products.size(); ++i) {
+            double discount = rand() % 21; // Random discount between 0% and 20%
+            products[i].applyDiscount(discount);
         }
+    }
+
+    double selectProducts() {
+        vector<int> selectedIndices;
+        double total = 0.0;
+        char continueChoice;
+
+        do {
+            int choice;
+            cout << "Enter the number of the product you want (1-" << products.size() << "): ";
+            cin >> choice;
+
+            if (choice < 1 || choice > static_cast<int>(products.size())) {
+                cout << "Invalid selection. Please choose a number between 1 and " << products.size() << "." << endl;
+            } else {
+                selectedIndices.push_back(choice - 1);
+                total += products[choice - 1].getPrice();
+                cout << "You selected: ";
+                products[choice - 1].displayInfo();
+            }
+
+            cout << "Do you want to select another product? (y/n): ";
+            cin >> continueChoice;
+        } while (continueChoice == 'y' || continueChoice == 'Y');
+
+        cout << "\nYou selected the following products:" << endl;
+        for (size_t i = 0; i < selectedIndices.size(); ++i) {
+            products[selectedIndices[i]].displayInfo();
+        }
+
+        return total;
     }
 };
 
 int main() {
-    // Create an array of Product objects
     const int NUM_PRODUCTS = 5;
     Product productArray[NUM_PRODUCTS] = {
         Product("Chips", 1.50),
@@ -83,22 +105,20 @@ int main() {
         Product("Gum", 0.75)
     };
 
-    // Create a vending machine object
     VendingMachine snackMachine("Snack Machine");
 
-    // Add products from the array to the vending machine
     for (int i = 0; i < NUM_PRODUCTS; ++i) {
         snackMachine.addProduct(productArray[i]);
     }
 
-    // Display all products in the vending machine
+    snackMachine.displayProducts();
+    snackMachine.applyRandomDiscounts();
+    cout << "\nAfter applying random discounts:\n" << endl;
     snackMachine.displayProducts();
 
-    // Apply a discount to all products
-    snackMachine.applyDiscountToAll(10);
+    double total = snackMachine.selectProducts();
 
-    // Display updated products
-    snackMachine.displayProducts();
+    cout << "\nTotal price: $" << fixed << setprecision(2) << total << endl;
 
     return 0;
 }
