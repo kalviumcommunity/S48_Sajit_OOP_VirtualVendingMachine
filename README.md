@@ -1,6 +1,8 @@
-## README.md
+# Virtual Vending Machine
 
-**Vending Machine Simulator**
+### Introduction
+
+This C++ project simulates a vending machine, providing a realistic experience of selecting and purchasing products. Users can choose from various items, apply discounts, and manage their purchases.
 
 ### How to Use
 
@@ -36,7 +38,7 @@ g++ vending_machine.cpp -o vending_machine
 
 ### Copyright and License
 
-**© 2024 Sajit Magesh**
+**© 2024 [Sajit Magesh](https://github.com/maverickOG)**
 
 This code is protected by copyright laws. Unauthorized use, reproduction, or distribution is prohibited.
 
