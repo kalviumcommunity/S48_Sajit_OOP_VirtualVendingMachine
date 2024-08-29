@@ -113,9 +113,10 @@ public:
                 if (products[choice - 1].purchase(quantity)) {
                     selectedIndices.push_back(choice - 1);
                     quantities.push_back(quantity);
-                    total += products[choice - 1].getPrice() * quantity; // Update the total cost
+                    total += products[choice - 1].getPrice() * quantity;
                     cout << "You selected: " << products[choice - 1].getName()
                          << " (Quantity: " << quantity << ")\n";
+                    cout << "Total Product Total: $" << fixed << setprecision(2) << products[choice - 1].getPrice() * quantity << endl;
                 } else {
                     // Purchase failed due to insufficient stock
                     cout << "Sorry, not enough " << products[choice - 1].getName() << " in stock. Available: " << products[choice - 1].getStockQuantity() << endl;
@@ -133,6 +134,7 @@ public:
                  << ", Price: $" << fixed << setprecision(2) << products[selectedIndices[i]].getPrice()
                  << ", Discount: " << products[selectedIndices[i]].getDiscount() << "%"
                  << ", Quantity: " << quantities[i] << endl;
+            cout << "Total Product Total: $" << fixed << setprecision(2) << products[selectedIndices[i]].getPrice() * quantities[i] << endl;
         }
 
         return total;
