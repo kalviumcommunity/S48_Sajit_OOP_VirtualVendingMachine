@@ -10,10 +10,10 @@ using namespace std;
 // Class to represent a product in the vending machine
 class Product {
 private:
-    string name;             // Name of the product
-    double price;            // Price of the product
-    double discount;         // Discount on the product (in percentage)
-    int stockQuantity;       // Available stock quantity of the product
+    string name;
+    double price;
+    double discount;
+    int stockQuantity;
 
 public:
     // Constructor to initialize the product with name, price, and stock quantity
@@ -39,11 +39,11 @@ public:
     // Returns true if the purchase is successful, false if there isn't enough stock
     bool purchase(int purchaseQuantity) {
         if (purchaseQuantity <= stockQuantity) {
-            stockQuantity -= purchaseQuantity;  // Reduce stock by the purchased quantity
-            return true;                        // Purchase successful
+            stockQuantity -= purchaseQuantity; // Reduce stock by the purchased quantity
+            return true; // Purchase successful
         } else {
             cout << "Sorry, not enough " << name << " in stock. Available: " << stockQuantity << endl;
-            return false;                       // Purchase failed due to insufficient stock
+            return false; // Purchase failed due to insufficient stock
         }
     }
 
@@ -57,8 +57,8 @@ public:
 // Class to represent a vending machine that holds a collection of products
 class VendingMachine {
 private:
-    string name;               // Name of the vending machine
-    vector<Product> products;  // List of products in the vending machine
+    string name;
+    vector<Product> products;
 
 public:
     // Constructor to initialize the vending machine with a name
@@ -81,19 +81,19 @@ public:
 
     // Function to apply random discounts to all products in the vending machine
     void applyRandomDiscounts() {
-        srand(time(0));  // Seed the random number generator with the current time
+        srand(time(0));
         for (size_t i = 0; i < products.size(); ++i) {
-            double discount = rand() % 21;  // Random discount between 0% and 20%
+            double discount = rand() % 21; // Random discount between 0% and 20%
             products[i].applyDiscount(discount);
         }
     }
 
     // Function to allow the user to select and purchase products
     double selectProducts() {
-        vector<int> selectedIndices;  // Stores the indices of selected products
-        vector<int> quantities;       // Stores the quantities of each selected product
-        double total = 0.0;           // Total price of selected products
-        char continueChoice;          // Variable to control whether the user continues selecting products
+        vector<int> selectedIndices;
+        vector<int> quantities;
+        double total = 0.0;
+        char continueChoice;
 
         do {
             int choice;
@@ -113,9 +113,12 @@ public:
                 if (products[choice - 1].purchase(quantity)) {
                     selectedIndices.push_back(choice - 1);
                     quantities.push_back(quantity);
-                    total += products[choice - 1].getPrice() * quantity;  // Update the total cost
+                    total += products[choice - 1].getPrice() * quantity; // Update the total cost
                     cout << "You selected: " << products[choice - 1].getName()
                          << " (Quantity: " << quantity << ")\n";
+                } else {
+                    // Purchase failed due to insufficient stock
+                    cout << "Sorry, not enough " << products[choice - 1].getName() << " in stock. Available: " << products[choice - 1].getStockQuantity() << endl;
                 }
             }
 
@@ -132,7 +135,7 @@ public:
                  << ", Quantity: " << quantities[i] << endl;
         }
 
-        return total;  // Return the total price of all selected products
+        return total;
     }
 };
 
