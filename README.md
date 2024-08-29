@@ -1,69 +1,41 @@
-# Virtual Vending Machine
+## Vending Machine Simulator
 
-## Overview
+### How to Use
 
-A C++ project simulating a simple virtual vending machine. It demonstrates object-oriented programming concepts using classes, objects, `this` pointer, and arrays of objects.
-
-## Features
-
-* Create and manage multiple vending machines.
-* Add, remove, and display products in each machine.
-* Apply discounts to individual products or all products in a machine.
-* Efficiently manage products using arrays of objects.
-
-## Classes
-
-* **`Product`**
-    * Attributes: name, price, quantity
-    * Methods: `displayInfo()`, `applyDiscount()`
-* **`VendingMachine`**
-    * Attributes: name, array of products
-    * Methods: `addProduct()`, `removeProduct()`, `displayProducts()`, `applyDiscountToAll()`
-
-## Key Concepts Demonstrated
-
-* **Classes and Objects:** Encapsulation of data and behavior.
-* **`this` Pointer:** Referencing the current object within its methods.
-* **Arrays of Objects:** Efficiently storing and managing multiple products.
-
-## How to Use
-
-1. **Compile:** `g++ Main.cpp -o Main`
-2. **Run:** `./Main`
-3. **Compile and Run:** `g++ Main.cpp -o Main && ./Main`
-
-## Sample Output
-
-```
-Created a new vending machine: Snack Machine
-Added Chips to Snack Machine
-Added Candy to Snack Machine
-Displaying products in Snack Machine:
-Product: Chips, Price: $1.50, Quantity: 5
-Product: Candy, Price: $1.00, Quantity: 10
-Applied 10% discount to all products in Snack Machine
+**1. Compile:**
+```bash
+g++ vending_machine.cpp -o vending_machine
 ```
 
-## Future Enhancements
+**2. Run:**
+```bash
+./vending_machine
+```
 
-* Implement a user interface for interaction with the vending machine.
-* Add functionality for purchasing products.
-* Implement inventory management and restocking.
-* Consider using more advanced data structures like linked lists or trees for better product management.
+### Features
 
-## Contributors
+- **Product Selection:** Users can choose products from a list.
+- **Quantity Input:** Users can specify the desired quantity of each product.
+- **Stock Management:** The program tracks product stock and prevents purchases when stock is insufficient.
+- **Random Discounts:** Products may have randomly applied discounts.
+- **Individual Product Totals:** The total cost for each selected product is displayed.
+- **Overall Total:** The final total cost of all selected products is calculated.
 
-Sajit Magesh
+### Code Structure
 
-### License
+- **`Product` class:** Represents a single product with name, price, discount, and stock quantity.
+- **`VendingMachine` class:** Manages a collection of products, handles product selection, and calculates the total cost.
 
-MIT License
+### Additional Notes
 
-### Additional Tips
+- **Random Seed:** The program uses a random seed based on the current time for consistent discount application.
+- **Error Handling:** Basic input validation is included to ensure user-entered data is within expected ranges.
+- **Code Structure:** The code is organized into well-defined classes and functions for better readability and maintainability.
 
-* **Code Clarity:** Use meaningful variable and function names, consistent indentation, and comments to improve code readability.
-* **Error Handling:** Implement error handling mechanisms to prevent unexpected behavior (e.g., handling invalid input or out-of-stock products).
-* **Testing:** Write unit tests to ensure the correctness of your code.
-* **Efficiency:** Consider optimizing your code for performance, especially if dealing with large datasets.
+### Future Enhancements
 
-By following these guidelines, you can create a well-structured and maintainable virtual vending machine project. Good luck with your coding! 🚀
+- **Change Calculation:** Calculate and dispense the appropriate change.
+- **Product Restock:** Allow for restocking of products.
+- **Inventory Management:** Track inventory levels and generate reports.
+
+**Feel free to contribute to this project by submitting pull requests or raising issues on GitHub!**
