@@ -1,4 +1,6 @@
-# Virtual Vending Machine
+## README.md
+
+**Vending Machine Simulator**
 
 ### How to Use
 
@@ -32,10 +34,10 @@ g++ vending_machine.cpp -o vending_machine
 - **Error Handling:** Basic input validation is included to ensure user-entered data is within expected ranges.
 - **Code Structure:** The code is organized into well-defined classes and functions for better readability and maintainability.
 
-### Future Enhancements
+### Copyright and License
 
-- **Change Calculation:** Calculate and dispense the appropriate change.
-- **Product Restock:** Allow for restocking of products.
-- **Inventory Management:** Track inventory levels and generate reports.
+**© 2024 Sajit Magesh**
+
+This code is protected by copyright laws. Unauthorized use, reproduction, or distribution is prohibited.
 
 **Feel free to contribute to this project by submitting pull requests or raising issues on GitHub!**
