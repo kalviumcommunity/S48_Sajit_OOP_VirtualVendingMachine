@@ -1,4 +1,4 @@
-## Vending Machine Simulator
+# Virtual Vending Machine
 
 ### How to Use
 
