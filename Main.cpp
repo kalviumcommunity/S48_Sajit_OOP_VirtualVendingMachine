@@ -22,11 +22,14 @@ public:
 
     // Function to display product information including name, price, discount, and stock quantity
     void displayInfo() const {
-        cout << "Product: " << name << ", Price: $" << fixed << setprecision(2) << price;
+        cout << left << setw(15) << name
+             << right << setw(10) << "$" << fixed << setprecision(2) << price;
         if (discount > 0) {
-            cout << ", Discount: " << discount << "%";
+            cout << right << setw(10) << discount << "%";
+        } else {
+            cout << right << setw(10) << "0%";
         }
-        cout << ", Stock Quantity: " << stockQuantity << endl;
+        cout << right << setw(10) << stockQuantity << endl;
     }
 
     // Function to apply a discount to the product
@@ -59,9 +62,7 @@ class VendingMachine {
 private:
     string name;
     vector<Product> products;
-
-    // Static variable to track total sales across all vending machines
-    static double totalSales;
+    static double totalSales; // Static member to track total sales across all vending machines
 
 public:
     // Constructor to initialize the vending machine with a name
@@ -75,9 +76,13 @@ public:
 
     // Function to display all the products in the vending machine
     void displayProducts() const {
-        cout << "Products in " << name << ":" << endl;
+        cout << "\nProducts in " << name << ":\n";
+        cout << left << setw(15) << "Product"
+             << right << setw(10) << "Price"
+             << right << setw(10) << "Discount"
+             << right << setw(10) << "Stock" << endl;
+        cout << "---------------------------------------------" << endl;
         for (size_t i = 0; i < products.size(); ++i) {
-            cout << i + 1 << ". ";
             products[i].displayInfo();
         }
     }
@@ -116,10 +121,12 @@ public:
                 if (products[choice - 1].purchase(quantity)) {
                     selectedIndices.push_back(choice - 1);
                     quantities.push_back(quantity);
-                    total += products[choice - 1].getPrice() * quantity;
+                    double productTotal = products[choice - 1].getPrice() * quantity;
+                    total += productTotal;
+                    totalSales += productTotal; // Update static total sales
                     cout << "You selected: " << products[choice - 1].getName()
                          << " (Quantity: " << quantity << ")\n";
-                    cout << "Total Product Total: $" << fixed << setprecision(2) << products[choice - 1].getPrice() * quantity << endl;
+                    cout << "Total for this product: $" << fixed << setprecision(2) << productTotal << endl;
                 } else {
                     // Purchase failed due to insufficient stock
                     cout << "Sorry, not enough " << products[choice - 1].getName() << " in stock. Available: " << products[choice - 1].getStockQuantity() << endl;
@@ -131,65 +138,52 @@ public:
         } while (continueChoice == 'y' || continueChoice == 'Y');
 
         // Display the final selection of products and their details
-        cout << "\nYou selected the following products:" << endl;
+        cout << "\nYou selected the following products:\n";
         for (size_t i = 0; i < selectedIndices.size(); ++i) {
-            cout << "Product: " << products[selectedIndices[i]].getName()
-                 << ", Price: $" << fixed << setprecision(2) << products[selectedIndices[i]].getPrice()
-                 << ", Discount: " << products[selectedIndices[i]].getDiscount() << "%"
-                 << ", Quantity: " << quantities[i] << endl;
-            cout << "Total Product Amount: $" << fixed << setprecision(2) << products[selectedIndices[i]].getPrice() * quantities[i] << endl;
+            cout << left << setw(15) << products[selectedIndices[i]].getName()
+                 << right << setw(10) << "$" << fixed << setprecision(2) << products[selectedIndices[i]].getPrice()
+                 << right << setw(10) << products[selectedIndices[i]].getDiscount() << "%"
+                 << right << setw(10) << quantities[i] << endl;
+            cout << "Total for this product: $" << fixed << setprecision(2) << products[selectedIndices[i]].getPrice() * quantities[i] << endl;
         }
-
-        // Add the total price to the total sales
-        totalSales += total;
 
         return total;
     }
 
-    // Static function to display the total sales across all vending machines
+    // Static member function to display total sales across all vending machines
     static void displayTotalSales() {
-        cout << "Total Sales across all vending machines: $" << fixed << setprecision(2) << totalSales << endl;
+        cout << "\nTotal Sales across all vending machines: $" << fixed << setprecision(2) << totalSales << endl;
     }
 };
 
-// Initialize the static variable totalSales
+// Initialize the static member variable
 double VendingMachine::totalSales = 0.0;
 
 int main() {
     // Create a vending machine dynamically using 'new'
     VendingMachine* snackMachine = new VendingMachine("Snack Machine");
 
-    // Define a set of products with initial stock quantities
-    const int NUM_PRODUCTS = 5;
-    Product productArray[NUM_PRODUCTS] = {
-        Product("Chips", 1.50, 10),
-        Product("Candy", 1.00, 15),
-        Product("Soda", 2.00, 8),
-        Product("Chocolate", 1.75, 12),
-        Product("Gum", 0.75, 20)
-    };
+    // Add products
+    snackMachine->addProduct(Product("Chips", 1.50, 10));
+    snackMachine->addProduct(Product("Candy", 1.00, 15));
+    snackMachine->addProduct(Product("Soda", 2.00, 8));
+    snackMachine->addProduct(Product("Chocolate", 1.75, 12));
+    snackMachine->addProduct(Product("Gum", 0.75, 20));
 
-    // Add products to the vending machine
-    for (int i = 0; i < NUM_PRODUCTS; ++i) {
-        snackMachine->addProduct(productArray[i]);
-    }
-
-    // Display products, apply random discounts, and show the discounted prices
+    // Display products, apply random discounts, and display discounted prices
     snackMachine->displayProducts();
     snackMachine->applyRandomDiscounts();
     cout << "\nAfter applying random discounts:\n" << endl;
     snackMachine->displayProducts();
 
-    // Allow the user to select products and display the total price
+    // Allow user to select products and calculate total price
     double total = snackMachine->selectProducts();
-
-    // Display the total price
     cout << "\nTotal price: $" << fixed << setprecision(2) << total << endl;
 
-    // Display total sales
+    // Display total sales using the static function
     VendingMachine::displayTotalSales();
 
-    // Delete dynamically allocated vending machine to free memory
+    // Clean up dynamically allocated memory
     delete snackMachine;
 
     return 0;
