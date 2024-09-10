@@ -137,7 +137,7 @@ public:
                  << ", Price: $" << fixed << setprecision(2) << products[selectedIndices[i]].getPrice()
                  << ", Discount: " << products[selectedIndices[i]].getDiscount() << "%"
                  << ", Quantity: " << quantities[i] << endl;
-            cout << "Total Product Total: $" << fixed << setprecision(2) << products[selectedIndices[i]].getPrice() * quantities[i] << endl;
+            cout << "Total Product Amount: $" << fixed << setprecision(2) << products[selectedIndices[i]].getPrice() * quantities[i] << endl;
         }
 
         // Add the total price to the total sales
