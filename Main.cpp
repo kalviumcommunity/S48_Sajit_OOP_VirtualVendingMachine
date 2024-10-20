@@ -8,34 +8,39 @@
 using namespace std;
 
 // Abstract base class for items in the vending machine
-// This class demonstrates abstraction by defining a common interface for all vending items
 class VendingItem {
 protected:
-    // Protected members are accessible in derived classes, but not outside the class hierarchy
     string name;
     double price;
     int stockQuantity;
 
 public:
-    // Constructor
+    // Default constructor
+    VendingItem() : name("Unnamed"), price(0.0), stockQuantity(0) {
+        cout << "Default constructor for VendingItem called\n";
+    }
+
+    // Parameterized constructor
     VendingItem(string name, double price, int stockQuantity)
-        : name(name), price(price), stockQuantity(stockQuantity) {}
+        : name(name), price(price), stockQuantity(stockQuantity) {
+        cout << "Parameterized constructor for VendingItem called\n";
+    }
 
     // Pure virtual functions define the interface that derived classes must implement
-    virtual void displayInfo() const = 0; // Pure virtual function
-    virtual double getPrice() const = 0; // Pure virtual function
-    virtual bool purchase(int quantity) = 0; // Pure virtual function
+    virtual void displayInfo() const = 0;
+    virtual double getPrice() const = 0;
+    virtual bool purchase(int quantity) = 0;
 
-    // Common getter methods
     string getName() const { return name; }
     int getStockQuantity() const { return stockQuantity; }
 
     // Virtual destructor ensures proper cleanup of derived classes
-    virtual ~VendingItem() {}
+    virtual ~VendingItem() {
+        cout << "Destructor for VendingItem called for " << name << endl;
+    }
 };
 
 // Concrete class inheriting from VendingItem
-// This class provides a specific implementation of the VendingItem interface
 class Product : public VendingItem {
 private:
     double discount;
@@ -46,9 +51,21 @@ private:
     }
 
 public:
-    // Constructor
+    // Default constructor
+    Product() : VendingItem("Unnamed", 0.0, 0), discount(0.0) {
+        cout << "Default constructor for Product called\n";
+    }
+
+    // Parameterized constructor
     Product(string name, double price, int stockQuantity)
-        : VendingItem(name, price, stockQuantity), discount(0.0) {}
+        : VendingItem(name, price, stockQuantity), discount(0.0) {
+        cout << "Parameterized constructor for Product called\n";
+    }
+
+    // Copy constructor
+    Product(const Product& other) : VendingItem(other.name, other.price, other.stockQuantity), discount(other.discount) {
+        cout << "Copy constructor for Product called\n";
+    }
 
     // Implementation of pure virtual functions from VendingItem
     void displayInfo() const override {
@@ -73,6 +90,11 @@ public:
     // Product-specific method
     void applyDiscount(double discountPercent) {
         discount = discountPercent;
+    }
+
+    // Destructor for Product class
+    ~Product() override {
+        cout << "Destructor for Product called for " << name << endl;
     }
 };
 
@@ -109,7 +131,6 @@ public:
     void applyRandomDiscounts() {
         srand(time(0));
         for (auto& item : items) {
-            // Dynamic casting to check if the item is a Product
             Product* product = dynamic_cast<Product*>(item);
             if (product) {
                 double discount = rand() % 21;
@@ -135,7 +156,6 @@ public:
                 cout << "Enter the quantity of " << items[choice - 1]->getName() << " you want to purchase: ";
                 cin >> quantity;
 
-                // Attempt to purchase the item
                 if (items[choice - 1]->purchase(quantity)) {
                     double itemTotal = items[choice - 1]->getPrice() * quantity;
                     total += itemTotal;
@@ -155,7 +175,6 @@ public:
         return total;
     }
 
-    // Getter for total sales
     double getTotalSales() const {
         return totalSales;
     }
@@ -165,6 +184,7 @@ public:
         for (auto item : items) {
             delete item;
         }
+        cout << "Destructor for VendingMachine called\n";
     }
 };
 
@@ -172,7 +192,6 @@ int main() {
     VendingMachine snackMachine("Snack Machine");
 
     // Adding products to the vending machine
-    // Note that we're adding Products, but the VendingMachine stores them as VendingItems
     snackMachine.addItem(new Product("Chips", 1.50, 10));
     snackMachine.addItem(new Product("Candy", 1.00, 15));
     snackMachine.addItem(new Product("Soda", 2.00, 8));
