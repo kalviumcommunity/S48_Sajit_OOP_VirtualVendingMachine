@@ -15,29 +15,17 @@ protected:
     int stockQuantity;
 
 public:
-    // Default constructor
-    VendingItem() : name("Unnamed"), price(0.0), stockQuantity(0) {
-        cout << "Default constructor for VendingItem called\n";
-    }
-
-    // Parameterized constructor
     VendingItem(string name, double price, int stockQuantity)
-        : name(name), price(price), stockQuantity(stockQuantity) {
-        cout << "Parameterized constructor for VendingItem called\n";
-    }
+        : name(name), price(price), stockQuantity(stockQuantity) {}
 
-    // Pure virtual functions define the interface that derived classes must implement
-    virtual void displayInfo() const = 0;
-    virtual double getPrice() const = 0;
-    virtual bool purchase(int quantity) = 0;
+    virtual void displayInfo() const = 0; // Pure virtual function
+    virtual double getPrice() const = 0; // Pure virtual function
+    virtual bool purchase(int quantity) = 0; // Pure virtual function
 
     string getName() const { return name; }
     int getStockQuantity() const { return stockQuantity; }
 
-    // Virtual destructor ensures proper cleanup of derived classes
-    virtual ~VendingItem() {
-        cout << "Destructor for VendingItem called for " << name << endl;
-    }
+    virtual ~VendingItem() {} // Silent destructor
 };
 
 // Concrete class inheriting from VendingItem
@@ -45,29 +33,14 @@ class Product : public VendingItem {
 private:
     double discount;
 
-    // Private method to calculate discounted price
     double getDiscountedPrice() const {
         return price * (1 - discount / 100);
     }
 
 public:
-    // Default constructor
-    Product() : VendingItem("Unnamed", 0.0, 0), discount(0.0) {
-        cout << "Default constructor for Product called\n";
-    }
-
-    // Parameterized constructor
     Product(string name, double price, int stockQuantity)
-        : VendingItem(name, price, stockQuantity), discount(0.0) {
-        cout << "Parameterized constructor for Product called\n";
-    }
+        : VendingItem(name, price, stockQuantity), discount(0.0) {}
 
-    // Copy constructor
-    Product(const Product& other) : VendingItem(other.name, other.price, other.stockQuantity), discount(other.discount) {
-        cout << "Copy constructor for Product called\n";
-    }
-
-    // Implementation of pure virtual functions from VendingItem
     void displayInfo() const override {
         cout << left << setw(15) << name
              << right << setw(10) << "$" << fixed << setprecision(2) << getDiscountedPrice()
@@ -87,15 +60,15 @@ public:
         return false;
     }
 
-    // Product-specific method
     void applyDiscount(double discountPercent) {
         discount = discountPercent;
     }
 
-    // Destructor for Product class
-    ~Product() override {
-        cout << "Destructor for Product called for " << name << endl;
+    double getDiscount() const {
+        return discount;
     }
+
+    ~Product() override {} // Silent destructor
 };
 
 // VendingMachine class that works with the abstract VendingItem
@@ -108,13 +81,11 @@ private:
 public:
     VendingMachine(string name) : name(name), totalSales(0.0) {}
 
-    // Add an item to the vending machine
     void addItem(VendingItem* item) {
         items.push_back(item);
         cout << "Added " << item->getName() << " to " << name << endl;
     }
 
-    // Display all items in the vending machine
     void displayItems() const {
         cout << "\nItems in " << name << ":\n";
         cout << left << setw(15) << "Item"
@@ -123,11 +94,10 @@ public:
              << right << setw(10) << "Stock" << endl;
         cout << "---------------------------------------------" << endl;
         for (const auto& item : items) {
-            item->displayInfo(); // Polymorphic call to displayInfo
+            item->displayInfo();
         }
     }
 
-    // Apply random discounts to products
     void applyRandomDiscounts() {
         srand(time(0));
         for (auto& item : items) {
@@ -139,10 +109,19 @@ public:
         }
     }
 
-    // Allow user to select and purchase items
+    // Structure to hold purchased product details
+    struct PurchasedProduct {
+        string productName;
+        double productPrice;
+        double discount;
+        int quantity;
+        double totalProductPrice;
+    };
+
     double selectItems() {
         double total = 0.0;
         char continueChoice;
+        vector<PurchasedProduct> purchases; // Vector to track purchased products
 
         do {
             int choice;
@@ -160,6 +139,17 @@ public:
                     double itemTotal = items[choice - 1]->getPrice() * quantity;
                     total += itemTotal;
                     totalSales += itemTotal;
+
+                    // Store the purchase details in the purchases vector
+                    PurchasedProduct purchase = {
+                        items[choice - 1]->getName(),
+                        items[choice - 1]->getPrice(),
+                        static_cast<Product*>(items[choice - 1])->getDiscount(),
+                        quantity,
+                        itemTotal
+                    };
+                    purchases.push_back(purchase);
+
                     cout << "You selected: " << items[choice - 1]->getName()
                          << " (Quantity: " << quantity << ")\n";
                     cout << "Total for this item: $" << fixed << setprecision(2) << itemTotal << endl;
@@ -172,6 +162,16 @@ public:
             cin >> continueChoice;
         } while (continueChoice == 'y' || continueChoice == 'Y');
 
+        // Display summary of purchased products
+        cout << "\nYou selected the following products:\n";
+        for (const auto& purchase : purchases) {
+            cout << "Product: " << purchase.productName
+                 << ", Price: $" << fixed << setprecision(2) << purchase.productPrice
+                 << ", Discount: " << purchase.discount << "%"
+                 << ", Quantity: " << purchase.quantity << endl;
+            cout << "Total Product Price: $" << fixed << setprecision(2) << purchase.totalProductPrice << endl;
+        }
+
         return total;
     }
 
@@ -179,19 +179,16 @@ public:
         return totalSales;
     }
 
-    // Destructor to clean up dynamically allocated VendingItems
     ~VendingMachine() {
         for (auto item : items) {
             delete item;
         }
-        cout << "Destructor for VendingMachine called\n";
     }
 };
 
 int main() {
     VendingMachine snackMachine("Snack Machine");
 
-    // Adding products to the vending machine
     snackMachine.addItem(new Product("Chips", 1.50, 10));
     snackMachine.addItem(new Product("Candy", 1.00, 15));
     snackMachine.addItem(new Product("Soda", 2.00, 8));
@@ -204,7 +201,7 @@ int main() {
     snackMachine.displayItems();
 
     double total = snackMachine.selectItems();
-    cout << "\nTotal price: $" << fixed << setprecision(2) << total << endl;
+    cout << "\nTotal Price: $" << fixed << setprecision(2) << total << endl;
 
     cout << "\nTotal Sales: $" << fixed << setprecision(2) << snackMachine.getTotalSales() << endl;
 
