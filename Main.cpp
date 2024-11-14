@@ -7,37 +7,27 @@
 
 using namespace std;
 
-// Product class handles individual item details and inventory management
+// Base Product class representing a general product
 class Product {
-private:
+protected:
     string name;
     double price;
-    double discount;
     int stockQuantity;
 
 public:
     Product(string name, double price, int stockQuantity)
-        : name(name), price(price), discount(0.0), stockQuantity(stockQuantity) {}
+        : name(name), price(price), stockQuantity(stockQuantity) {}
 
-    // Displays formatted product information including any active discounts
-    void displayInfo() const {
-        cout << "Product: " << name << ", Price: $" << fixed << setprecision(2) << price;
-        if (discount > 0) {
-            cout << ", Discount: " << discount << "%";
-        }
-        cout << ", Stock Quantity: " << stockQuantity << endl;
+    // Display product details
+    virtual void displayInfo() const {
+        cout << "Product: " << name << ", Price: $" << fixed << setprecision(2) << price
+             << ", Stock Quantity: " << stockQuantity << endl;
     }
 
-    // Applies discount and updates the price accordingly
-    void applyDiscount(double discountPercent) {
-        discount = discountPercent;
-        price *= (1 - discount / 100);
-    }
-
-    // Attempts to process a purchase, returns false if insufficient stock
-    bool purchase(int purchaseQuantity) {
-        if (purchaseQuantity <= stockQuantity) {
-            stockQuantity -= purchaseQuantity;
+    // Process purchase and reduce stock if available
+    bool purchase(int quantity) {
+        if (quantity <= stockQuantity) {
+            stockQuantity -= quantity;
             return true;
         } else {
             cout << "Sorry, not enough " << name << " in stock. Available: " << stockQuantity << endl;
@@ -45,57 +35,100 @@ public:
         }
     }
 
-    // Getter functions
-    string getName() const { return name; }
     double getPrice() const { return price; }
-    double getDiscount() const { return discount; }
-    int getStockQuantity() const { return stockQuantity; }
+    string getName() const { return name; }
 };
 
-// VendingMachine class manages products and tracks sales statistics
+// DiscountedProduct class inherits from Product, adding a discount feature (Single Inheritance)
+class DiscountedProduct : public Product {
+private:
+    double discount;
+
+public:
+    DiscountedProduct(string name, double price, int stockQuantity, double discount)
+        : Product(name, price, stockQuantity), discount(discount) {
+        applyDiscount();
+    }
+
+    // Apply discount to the product price
+    void applyDiscount() {
+        price *= (1 - discount / 100);
+    }
+
+    // Display discounted product details
+    void displayInfo() const override {
+        cout << "Discounted Product: " << name << ", Price after discount: $" << fixed
+             << setprecision(2) << price << ", Discount: " << discount << "%, Stock Quantity: " << stockQuantity << endl;
+    }
+};
+
+// Beverage class inherits from Product, adding carbonation info (Hierarchical Inheritance)
+class Beverage : public Product {
+private:
+    bool isCarbonated;
+
+public:
+    Beverage(string name, double price, int stockQuantity, bool isCarbonated)
+        : Product(name, price, stockQuantity), isCarbonated(isCarbonated) {}
+
+    // Display beverage-specific details
+    void displayInfo() const override {
+        cout << "Beverage: " << name << ", Price: $" << fixed << setprecision(2) << price
+             << ", Carbonated: " << (isCarbonated ? "Yes" : "No") << ", Stock Quantity: " << stockQuantity << endl;
+    }
+};
+
+// Snack class inherits from Product, adding health info (Hierarchical Inheritance)
+class Snack : public Product {
+private:
+    bool isHealthy;
+
+public:
+    Snack(string name, double price, int stockQuantity, bool isHealthy)
+        : Product(name, price, stockQuantity), isHealthy(isHealthy) {}
+
+    // Display snack-specific details
+    void displayInfo() const override {
+        cout << "Snack: " << name << ", Price: $" << fixed << setprecision(2) << price
+             << ", Healthy: " << (isHealthy ? "Yes" : "No") << ", Stock Quantity: " << stockQuantity << endl;
+    }
+};
+
+// VendingMachine class manages multiple products and tracks total sales and transactions
 class VendingMachine {
 private:
     string name;
-    vector<Product> products;
+    vector<Product*> products;
 
-    // Static variables for tracking performance across all machines
-    static double totalSales;        // Tracks total revenue across all machines
-    static int totalTransactions;    // Counts successful transactions across all machines
+    // Static variables to track sales and transactions across all instances
+    static double totalSales;
+    static int totalTransactions;
 
 public:
     VendingMachine(string name) : name(name) {}
 
-    void addProduct(const Product& product) {
+    // Add a product to the vending machine's inventory
+    void addProduct(Product* product) {
         products.push_back(product);
-        cout << "Added " << product.getName() << " to " << name << endl;
+        cout << "Added " << product->getName() << " to " << name << endl;
     }
 
+    // Display all products in the vending machine
     void displayProducts() const {
         cout << "Products in " << name << ":" << endl;
         for (size_t i = 0; i < products.size(); ++i) {
             cout << i + 1 << ". ";
-            products[i].displayInfo();
+            products[i]->displayInfo();
         }
     }
 
-    // Applies random discounts between 0-20% to all products
-    void applyRandomDiscounts() {
-        srand(time(0));
-        for (size_t i = 0; i < products.size(); ++i) {
-            double discount = rand() % 21;
-            products[i].applyDiscount(discount);
-        }
-    }
-
-    // Handles the product selection and purchase process
+    // Allow user to select products and process purchases
     double selectProducts() {
-        vector<int> selectedIndices;
-        vector<int> quantities;
         double total = 0.0;
         char continueChoice;
-        bool hasSuccessfulPurchase = false;
+        bool purchaseMade = false;
 
-        // Purchase loop - continues until user is done selecting products
+        // Loop to handle multiple product selections
         do {
             int choice;
             cout << "Enter the number of the product you want (1-" << products.size() << "): ";
@@ -105,21 +138,15 @@ public:
                 cout << "Invalid selection. Please choose a number between 1 and " << products.size() << "." << endl;
             } else {
                 int quantity;
-                cout << "Enter the quantity of " << products[choice - 1].getName() << " you want to purchase: ";
+                cout << "Enter the quantity of " << products[choice - 1]->getName() << " you want to purchase: ";
                 cin >> quantity;
 
-                // Process purchase if stock is available
-                if (products[choice - 1].purchase(quantity)) {
-                    selectedIndices.push_back(choice - 1);
-                    quantities.push_back(quantity);
-                    total += products[choice - 1].getPrice() * quantity;
-                    hasSuccessfulPurchase = true;
-
-                    // Display purchase details
-                    cout << "You selected: " << products[choice - 1].getName()
-                         << " (Quantity: " << quantity << ")\n";
-                    cout << "Total Product Total: $" << fixed << setprecision(2)
-                         << products[choice - 1].getPrice() * quantity << endl;
+                // Process purchase if stock is sufficient
+                if (products[choice - 1]->purchase(quantity)) {
+                    total += products[choice - 1]->getPrice() * quantity;
+                    purchaseMade = true;
+                    cout << "Added " << products[choice - 1]->getName() << " to total, costing: $"
+                         << fixed << setprecision(2) << products[choice - 1]->getPrice() * quantity << endl;
                 }
             }
 
@@ -127,19 +154,8 @@ public:
             cin >> continueChoice;
         } while (continueChoice == 'y' || continueChoice == 'Y');
 
-        // Display summary of purchases
-        cout << "\nYou selected the following products:" << endl;
-        for (size_t i = 0; i < selectedIndices.size(); ++i) {
-            cout << "Product: " << products[selectedIndices[i]].getName()
-                 << ", Price: $" << fixed << setprecision(2) << products[selectedIndices[i]].getPrice()
-                 << ", Discount: " << products[selectedIndices[i]].getDiscount() << "%"
-                 << ", Quantity: " << quantities[i] << endl;
-            cout << "Total Product Amount: $" << fixed << setprecision(2)
-                 << products[selectedIndices[i]].getPrice() * quantities[i] << endl;
-        }
-
-        // Update sales statistics if any purchases were successful
-        if (hasSuccessfulPurchase) {
+        // Update static totals if a purchase was made
+        if (purchaseMade) {
             totalSales += total;
             totalTransactions++;
         }
@@ -147,17 +163,13 @@ public:
         return total;
     }
 
-    // Static methods for displaying sales statistics
+    // Static methods to display cumulative sales and transaction statistics
     static void displayTotalSales() {
         cout << "Total Sales across all vending machines: $" << fixed << setprecision(2) << totalSales << endl;
     }
 
     static void displayTransactionStats() {
         cout << "Total number of successful transactions: " << totalTransactions << endl;
-        if (totalTransactions > 0) {
-            cout << "Average transaction value: $" << fixed << setprecision(2)
-                 << totalSales / totalTransactions << endl;
-        }
     }
 };
 
@@ -166,37 +178,24 @@ double VendingMachine::totalSales = 0.0;
 int VendingMachine::totalTransactions = 0;
 
 int main() {
-    // Create and initialize vending machine with products
-    VendingMachine* snackMachine = new VendingMachine("Snack Machine");
+    VendingMachine* machine = new VendingMachine("Snack Machine");
 
-    const int NUM_PRODUCTS = 5;
-    Product productArray[NUM_PRODUCTS] = {
-        Product("Chips", 1.50, 10),
-        Product("Candy", 1.00, 15),
-        Product("Soda", 2.00, 8),
-        Product("Chocolate", 1.75, 12),
-        Product("Gum", 0.75, 20)
-    };
+    // Adding different types of products to demonstrate inheritance
+    machine->addProduct(new DiscountedProduct("Chips", 1.50, 10, 10));
+    machine->addProduct(new Beverage("Soda", 2.00, 8, true));
+    machine->addProduct(new Snack("Candy Bar", 1.75, 15, false));
+    machine->addProduct(new Beverage("Water", 1.00, 12, false));
+    machine->addProduct(new Snack("Granola Bar", 2.50, 20, true));
 
-    // Stock the machine
-    for (int i = 0; i < NUM_PRODUCTS; ++i) {
-        snackMachine->addProduct(productArray[i]);
-    }
+    // Display all products and allow selection
+    machine->displayProducts();
+    double total = machine->selectProducts();
+    cout << "\nTotal price for selected products: $" << fixed << setprecision(2) << total << endl;
 
-    // Display products and apply random discounts
-    snackMachine->displayProducts();
-    snackMachine->applyRandomDiscounts();
-    cout << "\nAfter applying random discounts:\n" << endl;
-    snackMachine->displayProducts();
-
-    // Process user purchases
-    double total = snackMachine->selectProducts();
-    cout << "\nTotal price: $" << fixed << setprecision(2) << total << endl;
-
-    // Display final statistics
+    // Display cumulative sales and transaction statistics
     VendingMachine::displayTotalSales();
     VendingMachine::displayTransactionStats();
 
-    delete snackMachine;
+    delete machine;
     return 0;
 }
