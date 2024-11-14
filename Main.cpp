@@ -13,10 +13,15 @@ protected:
     string name;
     double price;
     int stockQuantity;
-    double discount;
 
 public:
     Product(string name, double price, int stockQuantity)
+        : name(name), price(price), stockQuantity(stockQuantity) {}
+
+    // Display product details
+    virtual void displayInfo() const {
+        cout << "Product: " << name << ", Price: $" << fixed << setprecision(2) << price
+             << ", Stock Quantity: " << stockQuantity << endl;
     }
 
     // Process purchase and reduce stock if available
@@ -25,8 +30,51 @@ public:
             stockQuantity -= quantity;
             return true;
         } else {
+            cout << "Sorry, not enough " << name << " in stock. Available: " << stockQuantity << endl;
             return false;
-        }   
+        }
+    }
+
+    double getPrice() const { return price; }
+    string getName() const { return name; }
+};
+
+// DiscountedProduct class inherits from Product, adding a discount feature (Single Inheritance)
+class DiscountedProduct : public Product {
+private:
+    double discount;
+
+public:
+    DiscountedProduct(string name, double price, int stockQuantity, double discount)
+        : Product(name, price, stockQuantity), discount(discount) {
+        applyDiscount();
+    }
+
+    // Apply discount to the product price
+    void applyDiscount() {
+        price *= (1 - discount / 100);
+    }
+
+    // Display discounted product details
+    void displayInfo() const override {
+        cout << "Discounted Product: " << name << ", Price after discount: $" << fixed
+             << setprecision(2) << price << ", Discount: " << discount << "%, Stock Quantity: " << stockQuantity << endl;
+    }
+};
+
+// Beverage class inherits from Product, adding carbonation info (Hierarchical Inheritance)
+class Beverage : public Product {
+private:
+    bool isCarbonated;
+
+public:
+    Beverage(string name, double price, int stockQuantity, bool isCarbonated)
+        : Product(name, price, stockQuantity), isCarbonated(isCarbonated) {}
+
+    // Display beverage-specific details
+    void displayInfo() const override {
+        cout << "Beverage: " << name << ", Price: $" << fixed << setprecision(2) << price
+             << ", Carbonated: " << (isCarbonated ? "Yes" : "No") << ", Stock Quantity: " << stockQuantity << endl;
     }
 };
 
@@ -70,6 +118,7 @@ public:
         cout << "Products in " << name << ":" << endl;
         for (size_t i = 0; i < products.size(); ++i) {
             cout << i + 1 << ". ";
+            products[i]->displayInfo();
         }
     }
 
@@ -82,10 +131,10 @@ public:
         // Loop to handle multiple product selections
         do {
             int choice;
-            cout << "Enter the number of the item you want (1-" << products.size() << "): ";
+            cout << "Enter the number of the product you want (1-" << products.size() << "): ";
             cin >> choice;
 
-            if (choice < 1 || choice > static_cast<int>(products.size()) || choice <= 0) {
+            if (choice < 1 || choice > static_cast<int>(products.size())) {
                 cout << "Invalid selection. Please choose a number between 1 and " << products.size() << "." << endl;
             } else {
                 int quantity;
@@ -101,7 +150,7 @@ public:
                 }
             }
 
-            cout << "Do you want to select another item? (y/n): ";
+            cout << "Do you want to select another product? (y/n): ";
             cin >> continueChoice;
         } while (continueChoice == 'y' || continueChoice == 'Y');
 
@@ -129,6 +178,24 @@ double VendingMachine::totalSales = 0.0;
 int VendingMachine::totalTransactions = 0;
 
 int main() {
+    VendingMachine* machine = new VendingMachine("Snack Machine");
+
+    // Adding different types of products to demonstrate inheritance
+    machine->addProduct(new DiscountedProduct("Chips", 1.50, 10, 10));
+    machine->addProduct(new Beverage("Soda", 2.00, 8, true));
+    machine->addProduct(new Snack("Candy Bar", 1.75, 15, false));
+    machine->addProduct(new Beverage("Water", 1.00, 12, false));
+    machine->addProduct(new Snack("Granola Bar", 2.50, 20, true));
+
+    // Display all products and allow selection
+    machine->displayProducts();
+    double total = machine->selectProducts();
+    cout << "\nTotal price for selected products: $" << fixed << setprecision(2) << total << endl;
+
+    // Display cumulative sales and transaction statistics
     VendingMachine::displayTotalSales();
+    VendingMachine::displayTransactionStats();
+
+    delete machine;
     return 0;
 }
