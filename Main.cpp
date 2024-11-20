@@ -7,6 +7,44 @@
 
 using namespace std;
 
+// Price calculator class - handles all price-related calculations
+class PriceCalculator {
+public:
+    static double calculateDiscountedPrice(double originalPrice, double discount) {
+        return originalPrice * (1 - discount / 100);
+    }
+
+    static double convertCurrency(string currency, double price) {
+        if(currency == "EUR") {
+            return price * 1.1;  // EUR to USD
+        } else if(currency == "GBP") {
+            return price * 1.27; // GBP to USD
+        }
+        return price;
+    }
+
+    static double calculateCarbonatedPrice(double price) {
+        return price * 1.1;
+    }
+};
+
+// Inventory manager class - handles stock-related operations
+class InventoryManager {
+public:
+    static bool checkAvailability(int requestedQuantity, int currentStock) {
+        return requestedQuantity <= currentStock;
+    }
+
+    static int updateStock(int currentStock, int quantity, bool isAddition) {
+        if(isAddition) {
+            return currentStock + quantity;
+        } else if(currentStock >= quantity) {
+            return currentStock - quantity;
+        }
+        return currentStock;
+    }
+};
+
 // Abstract Base Product class implementing core functionality
 // Made abstract by including pure virtual functions
 class Product {
@@ -29,7 +67,7 @@ public:
 
     // Regular virtual functions - can be overridden by derived classes
     virtual bool isAvailable() const {
-        return stockQuantity > 0;
+        return InventoryManager::checkAvailability(1, stockQuantity);
     }
 
     virtual string getCategory() const {
@@ -42,22 +80,16 @@ public:
     }
 
     void updatePrice(double newPrice, double discount) {
-        price = newPrice * (1 - discount/100);
+        price = PriceCalculator::calculateDiscountedPrice(newPrice, discount);
     }
 
     void updatePrice(string currency, double newPrice) {
-        if(currency == "EUR") {
-            price = newPrice * 1.1;  // EUR to USD
-        } else if(currency == "GBP") {
-            price = newPrice * 1.27; // GBP to USD
-        } else {
-            price = newPrice;
-        }
+        price = PriceCalculator::convertCurrency(currency, newPrice);
     }
 
     bool purchase(int quantity) {
-        if (quantity <= stockQuantity) {
-            stockQuantity -= quantity;
+        if (InventoryManager::checkAvailability(quantity, stockQuantity)) {
+            stockQuantity = InventoryManager::updateStock(stockQuantity, quantity, false);
             return true;
         }
         cout << "Sorry, not enough " << name << " in stock. Available: " << stockQuantity << endl;
@@ -69,14 +101,12 @@ public:
 
     // Operator Overloading for stock management
     Product& operator+=(int quantity) {
-        stockQuantity += quantity;
+        stockQuantity = InventoryManager::updateStock(stockQuantity, quantity, true);
         return *this;
     }
 
     Product& operator-=(int quantity) {
-        if(stockQuantity >= quantity) {
-            stockQuantity -= quantity;
-        }
+        stockQuantity = InventoryManager::updateStock(stockQuantity, quantity, false);
         return *this;
     }
 
@@ -104,7 +134,7 @@ public:
 
     // Implementation of pure virtual function for price calculation
     double calculatePrice() const override {
-        return price * (1 - discount / 100);
+        return PriceCalculator::calculateDiscountedPrice(price, discount);
     }
 
     // Override of regular virtual function
@@ -135,8 +165,7 @@ public:
 
     // Implementation of pure virtual price calculation
     double calculatePrice() const override {
-        // Premium pricing for carbonated drinks
-        return isCarbonated ? price * 1.1 : price;
+        return isCarbonated ? PriceCalculator::calculateCarbonatedPrice(price) : price;
     }
 
     // Override of regular virtual functions
@@ -145,7 +174,7 @@ public:
     }
 
     bool isAvailable() const override {
-        return stockQuantity > 0 && volume > 0;
+        return InventoryManager::checkAvailability(1, stockQuantity) && volume > 0;
     }
 
     // Function Overloading for volume updates
@@ -158,34 +187,64 @@ public:
     }
 };
 
+// Sales tracker class - handles sales-related operations
+class SalesTracker {
+private:
+    static double totalSales;
+    static int totalTransactions;
+
+public:
+    static void recordSale(double amount) {
+        totalSales += amount;
+        totalTransactions++;
+    }
+
+    static void displayTotalSales() {
+        cout << "Total Sales: $" << fixed << setprecision(2) << totalSales << endl;
+    }
+
+    static void displayTransactionStats() {
+        cout << "Total Transactions: " << totalTransactions << endl;
+    }
+};
+
+double SalesTracker::totalSales = 0.0;
+int SalesTracker::totalTransactions = 0;
+
+// Display manager class - handles all display-related operations
+class DisplayManager {
+public:
+    static void displayProductList(const string& machineName, const vector<Product*>& products) {
+        cout << "\nProducts in " << machineName << ":\n" << endl;
+        for (size_t i = 0; i < products.size(); ++i) {
+            cout << i + 1 << ". ";
+            products[i]->displayInfo();
+            cout << "   Status: " << (products[i]->isAvailable() ? "Available" : "Unavailable")
+                 << "\n" << endl;
+        }
+    }
+
+    static void displayAddedProduct(const string& name, const string& category) {
+        cout << "Added " << name << " (" << category << ")" << endl;
+    }
+};
+
 // VendingMachine class manages the product inventory
 class VendingMachine {
 private:
     string name;
     vector<Product*> products;  // Polymorphic container of abstract class pointers
-    static double totalSales;
-    static int totalTransactions;
 
 public:
     VendingMachine(string name) : name(name) {}
 
     void addProduct(Product* product) {
         products.push_back(product);
-        // Using virtual function getCategory()
-        cout << "Added " << product->getName()
-             << " (" << product->getCategory() << ")" << endl;
+        DisplayManager::displayAddedProduct(product->getName(), product->getCategory());
     }
 
     void displayProducts() const {
-        cout << "\nProducts in " << name << ":\n" << endl;
-        for (size_t i = 0; i < products.size(); ++i) {
-            cout << i + 1 << ". ";
-            // Using pure virtual functions through abstract class pointer
-            products[i]->displayInfo();
-            // Using virtual function isAvailable()
-            cout << "   Status: " << (products[i]->isAvailable() ? "Available" : "Unavailable")
-                 << "\n" << endl;
-        }
+        DisplayManager::displayProductList(name, products);
     }
 
     double selectProducts() {
@@ -203,7 +262,6 @@ public:
                 continue;
             }
 
-            // Using virtual function for availability check
             if (!products[choice - 1]->isAvailable()) {
                 cout << "Product currently unavailable." << endl;
                 continue;
@@ -214,7 +272,6 @@ public:
             cin >> quantity;
 
             if (products[choice - 1]->purchase(quantity)) {
-                // Using pure virtual function for price calculation
                 double itemTotal = products[choice - 1]->calculatePrice() * quantity;
                 total += itemTotal;
                 purchaseMade = true;
@@ -226,24 +283,18 @@ public:
         } while (continueChoice == 'y' || continueChoice == 'Y');
 
         if (purchaseMade) {
-            totalSales += total;
-            totalTransactions++;
+            SalesTracker::recordSale(total);
         }
 
         return total;
     }
 
-    static void displayTotalSales() {
-        cout << "Total Sales: $" << fixed << setprecision(2) << totalSales << endl;
-    }
-
-    static void displayTransactionStats() {
-        cout << "Total Transactions: " << totalTransactions << endl;
+    ~VendingMachine() {
+        for (auto product : products) {
+            delete product;
+        }
     }
 };
-
-double VendingMachine::totalSales = 0.0;
-int VendingMachine::totalTransactions = 0;
 
 int main() {
     VendingMachine* machine = new VendingMachine("Smart Vending");
@@ -261,8 +312,8 @@ int main() {
     cout << "\nTotal amount: $" << fixed << setprecision(2) << total << endl;
 
     cout << "\n=== Sales Statistics ===\n";
-    VendingMachine::displayTotalSales();
-    VendingMachine::displayTransactionStats();
+    SalesTracker::displayTotalSales();
+    SalesTracker::displayTransactionStats();
 
     delete machine;
     return 0;
