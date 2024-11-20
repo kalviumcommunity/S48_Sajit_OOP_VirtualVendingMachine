@@ -22,10 +22,6 @@ public:
         }
         return price;
     }
-
-    static double calculateCarbonatedPrice(double price) {
-        return price * 1.1;
-    }
 };
 
 // Inventory manager class - handles stock-related operations
@@ -46,7 +42,6 @@ public:
 };
 
 // Abstract Base Product class implementing core functionality
-// Made abstract by including pure virtual functions
 class Product {
 protected:
     string name;
@@ -61,17 +56,13 @@ public:
         : name(name), price(price), stockQuantity(stockQuantity) {}
 
     // Pure virtual functions - make Product an abstract class
-    // Each derived class must implement these
     virtual void displayInfo() const = 0;
     virtual double calculatePrice() const = 0;
+    virtual string getCategory() const = 0;
 
-    // Regular virtual functions - can be overridden by derived classes
+    // Virtual function with default implementation
     virtual bool isAvailable() const {
-        return InventoryManager::checkAvailability(1, stockQuantity);
-    }
-
-    virtual string getCategory() const {
-        return "General Product";
+        return stockQuantity > 0;
     }
 
     // Function Overloading - different ways to update price
@@ -110,11 +101,10 @@ public:
         return *this;
     }
 
-    // Virtual destructor for proper cleanup of derived classes
     virtual ~Product() {}
 };
 
-// Derived class implementing the abstract class Product
+// Derived class for discounted products
 class DiscountedProduct : public Product {
 private:
     double discount;
@@ -123,7 +113,6 @@ public:
     DiscountedProduct(string name, double price, int stockQuantity, double discount)
         : Product(name, price, stockQuantity), discount(discount) {}
 
-    // Implementation of pure virtual function - required by abstract class
     void displayInfo() const override {
         cout << "Discounted Product: " << name
              << "\n  Original Price: $" << fixed << setprecision(2) << price
@@ -132,29 +121,25 @@ public:
              << "\n  Stock: " << stockQuantity << endl;
     }
 
-    // Implementation of pure virtual function for price calculation
     double calculatePrice() const override {
         return PriceCalculator::calculateDiscountedPrice(price, discount);
     }
 
-    // Override of regular virtual function
     string getCategory() const override {
         return "Discounted Item";
     }
 };
 
-// Another derived class implementing the abstract class Product
+// Derived class for beverages
 class Beverage : public Product {
 private:
     bool isCarbonated;
     double volume;  // in liters
 
 public:
-    // Constructor Overloading with different parameter sets
     Beverage(string name, double price, int stockQuantity, bool isCarbonated, double volume)
         : Product(name, price, stockQuantity), isCarbonated(isCarbonated), volume(volume) {}
 
-    // Implementation of pure virtual function - required by abstract class
     void displayInfo() const override {
         cout << "Beverage: " << name
              << "\n  Price: $" << fixed << setprecision(2) << calculatePrice()
@@ -163,21 +148,18 @@ public:
              << "\n  Stock: " << stockQuantity << endl;
     }
 
-    // Implementation of pure virtual price calculation
     double calculatePrice() const override {
-        return isCarbonated ? PriceCalculator::calculateCarbonatedPrice(price) : price;
+        return isCarbonated ? price * 1.1 : price;  // 10% premium for carbonated drinks
     }
 
-    // Override of regular virtual functions
     string getCategory() const override {
         return isCarbonated ? "Carbonated Beverage" : "Non-carbonated Beverage";
     }
 
     bool isAvailable() const override {
-        return InventoryManager::checkAvailability(1, stockQuantity) && volume > 0;
+        return stockQuantity > 0 && volume > 0;
     }
 
-    // Function Overloading for volume updates
     void updateVolume(double newVolume) {
         volume = newVolume;
     }
@@ -187,7 +169,46 @@ public:
     }
 };
 
-// Sales tracker class - handles sales-related operations
+// New derived class for limited time products
+class LimitedTimeProduct : public Product {
+private:
+    time_t expiryDate;
+    double specialPrice;
+
+public:
+    LimitedTimeProduct(string name, double price, int stockQuantity,
+                      double specialPrice, int daysValid)
+        : Product(name, price, stockQuantity),
+          specialPrice(specialPrice) {
+        expiryDate = time(0) + (daysValid * 24 * 60 * 60);
+    }
+
+    void displayInfo() const override {
+        time_t now = time(0);
+        int daysLeft = (expiryDate - now) / (24 * 60 * 60);
+
+        cout << "Limited Time Product: " << name
+             << "\n  Regular Price: $" << fixed << setprecision(2) << price
+             << "\n  Special Price: $" << calculatePrice()
+             << "\n  Days Left: " << daysLeft
+             << "\n  Stock: " << stockQuantity << endl;
+    }
+
+    double calculatePrice() const override {
+        time_t now = time(0);
+        return now < expiryDate ? specialPrice : price;
+    }
+
+    string getCategory() const override {
+        return "Limited Time Offer";
+    }
+
+    bool isAvailable() const override {
+        return stockQuantity > 0 && time(0) < expiryDate;
+    }
+};
+
+// Sales tracker class
 class SalesTracker {
 private:
     static double totalSales;
@@ -211,40 +232,29 @@ public:
 double SalesTracker::totalSales = 0.0;
 int SalesTracker::totalTransactions = 0;
 
-// Display manager class - handles all display-related operations
-class DisplayManager {
-public:
-    static void displayProductList(const string& machineName, const vector<Product*>& products) {
-        cout << "\nProducts in " << machineName << ":\n" << endl;
-        for (size_t i = 0; i < products.size(); ++i) {
-            cout << i + 1 << ". ";
-            products[i]->displayInfo();
-            cout << "   Status: " << (products[i]->isAvailable() ? "Available" : "Unavailable")
-                 << "\n" << endl;
-        }
-    }
-
-    static void displayAddedProduct(const string& name, const string& category) {
-        cout << "Added " << name << " (" << category << ")" << endl;
-    }
-};
-
 // VendingMachine class manages the product inventory
 class VendingMachine {
 private:
     string name;
-    vector<Product*> products;  // Polymorphic container of abstract class pointers
+    vector<Product*> products;
 
 public:
     VendingMachine(string name) : name(name) {}
 
     void addProduct(Product* product) {
         products.push_back(product);
-        DisplayManager::displayAddedProduct(product->getName(), product->getCategory());
+        cout << "Added " << product->getName()
+             << " (" << product->getCategory() << ")" << endl;
     }
 
     void displayProducts() const {
-        DisplayManager::displayProductList(name, products);
+        cout << "\nProducts in " << name << ":\n" << endl;
+        for (size_t i = 0; i < products.size(); ++i) {
+            cout << i + 1 << ". ";
+            products[i]->displayInfo();
+            cout << "   Status: " << (products[i]->isAvailable() ? "Available" : "Unavailable")
+                 << "\n" << endl;
+        }
     }
 
     double selectProducts() {
@@ -299,12 +309,15 @@ public:
 int main() {
     VendingMachine* machine = new VendingMachine("Smart Vending");
 
-    // Creating different types of products demonstrating abstract class implementation
+    // Adding regular products
     machine->addProduct(new DiscountedProduct("Lays Chips", 2.50, 10, 15));        // 15% off
     machine->addProduct(new Beverage("Coca Cola", 2.00, 12, true, 0.33));          // carbonated, 330ml
     machine->addProduct(new DiscountedProduct("Protein Bar", 3.50, 8, 10));        // 10% off
     machine->addProduct(new Beverage("Mineral Water", 1.50, 15, false, 0.5));      // non-carbonated, 500ml
     machine->addProduct(new Beverage("Monster Energy", 3.50, 10, true, 0.473));    // carbonated, 473ml
+
+    // Adding a new type of product (Limited Time Offer)
+    machine->addProduct(new LimitedTimeProduct("Special Snack", 5.00, 5, 3.99, 7)); // 7-day offer
 
     cout << "\n=== Welcome to Smart Vending ===\n";
     machine->displayProducts();
